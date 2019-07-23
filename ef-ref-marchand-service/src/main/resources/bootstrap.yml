@@ -1,0 +1,17 @@
+server:
+  port: 8084
+  error.whitelabel.enabled: false
+
+spring:
+  application:
+    name: ef-ref-marchand-service
+  profiles:
+    active: local
+
+---
+spring:
+  profiles: docker
+  cloud:
+    config:
+      uri: http://sb-ref-config-service:8088
+      fail-fast: true

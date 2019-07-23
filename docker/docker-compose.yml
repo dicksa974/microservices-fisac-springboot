@@ -1,0 +1,120 @@
+version: '2'
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    image: wurstmeister/kafka
+    container_name: kafka
+    hostname: kafka
+    restart: always
+    ports:
+      - "9092:9092"
+    links:
+      - zookeeper
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  eureka:
+    environment:
+      SERVER_PORT: 8761
+      JAVA_OPTS: -Xmx4g
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_HOST: ef-ref-eureka-service
+      EUREKA_PORT: 8761
+    image: shipwright/sb-ref-eureka-service:1.0.0-SNAPSHOT
+    container_name: ef-ref-eureka-service
+    hostname: ef-ref-eureka-service
+    restart: always
+    ports:
+      - "8761:8761"
+  configserver:
+    environment:
+      COUCHBASE_IP: localhost
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_HOST: ef-ref-eureka-service
+      EUREKA_PORT: 8761
+      JAVA_OPTS: -Xmx4g
+    image: shipwright/sb-ref-config-service:1.0.0-SNAPSHOT
+    container_name: ef-ref-config-service
+    hostname: ef-ref-config-service
+    restart: always
+    ports:
+      - "11111:8080"
+    links:
+      - eureka
+    depends_on:
+      - eureka
+  auth:
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      ACME_SERVICE_SECRET: acmesecret
+      EDGE_SERVICE_SECRET: edgesecret
+      RESERVATION_SERVICE_SECRET: reservationsecret
+      VENUE_SERVICE_SECRET: venuesecret
+      CONFIG_HOST: ef-ref-config-service
+      CONFIG_PORT: 8080
+      JAVA_OPTS: -Xmx4g
+    image: shipwright/sb-ref-auth-service:1.0.0-SNAPSHOT
+    container_name: ef-ref-auth-service
+    hostname: ef-ref-auth-service
+    restart: always
+    ports:
+      - "11102:8080"
+    links:
+      - configserver
+    depends_on:
+      - configserver
+  composite:
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      CONFIG_HOST: ef-ref-config-service
+      CONFIG_PORT: 8080
+      KAFKA_HOSTS: "kafka:9092"
+      JAVA_OPTS: -Xmx4g
+    image: shipwright/ef-ref-composite-service:1.0.0-SNAPSHOT
+    container_name: ef-ref-composite-service
+    hostname: ef-ref-composite-service
+    restart: always
+    ports:
+      - "11103:8080"
+  gateway:
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      CONFIG_HOST: ef-ref-config-service
+      CONFIG_PORT: 8080
+    image: shipwright/sb-ref-edge-service:1.0.0-SNAPSHOT
+    container_name: ef-ref-edge-service
+    hostname: ef-ref-edge-service
+    restart: always
+    ports:
+      - "11104:8080"
+  hystrix:
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      CONFIG_HOST: ef-ref-config-service
+      CONFIG_PORT: 8080
+    image: shipwright/sb-ref-hystrix-dashboard:1.0.0-SNAPSHOT
+    container_name: ef-ref-hystrix-dashboard
+    hostname: ef-ref-hystrix-dashboard
+    restart: always
+    ports:
+      - "11105:8080"
+  reservation:
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      CONFIG_HOST: sb-ref-config-service
+      CONFIG_PORT: 8080
+      JAVA_OPTS: -Xmx4g
+    image: shipwright/ef-ref-reservation-service:1.0.0-SNAPSHOT
+    container_name: ef-ref-reservation-service
+    hostname: ef-ref-reservation-service
+    restart: always
+    ports:
+      - "11106:8080"

@@ -1,0 +1,6 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: ef-ref-eureka-service

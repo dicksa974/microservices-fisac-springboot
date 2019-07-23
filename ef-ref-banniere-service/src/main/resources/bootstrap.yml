@@ -1,0 +1,8 @@
+port: 8085
+error.whitelabel.enabled: false
+
+spring:
+  application:
+    name: ef-ref-banniere-service
+  profiles:
+    active: local

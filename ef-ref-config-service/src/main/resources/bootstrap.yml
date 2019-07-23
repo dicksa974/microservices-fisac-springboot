@@ -1,0 +1,3 @@
+spring:
+  application:
+    name: ef-ref-config-service

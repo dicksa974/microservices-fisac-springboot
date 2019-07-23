@@ -1,0 +1,79 @@
+# Disable Spring Cloud and Zipkin
+spring:
+  cache:
+    caffeine:
+      spec: expireAfterAccess=30s,maximumSize=1000
+  cloud:
+    config:
+      enabled: true
+    stream:
+      bindings:
+        output:
+          destination: venuetopic
+          content-type: application/json
+          resetOffsets: true
+      kafka:
+        binder:
+          brokers: localhost:9092
+  zipkin:
+    enabled: true
+  data:
+    mongodb:
+      host: ${MONGO_HOST:localhost}
+      port: 27017
+      database: ${MONGO_DATABASE:foodplace}
+      username: ${MONGO_USERNAME:root}
+      password: ${MONGO_PASSWORD:example}
+
+# Disable security
+security:
+  ignored: /**
+
+###
+# Actuator
+###
+endpoints:
+  health:
+    sensitive: false
+
+management:
+  port: ${server.port}
+  context-path: /admin
+  info.git.mode: full
+  security:
+    enabled: false
+
+###
+# Hystrix Configuration
+###
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 20000
+
+###
+# Logging Configuration
+###
+logging:
+  level:
+    root: INFO
+    org:
+      springframework: INFO
+      hibernate: ERROR
+    com.example: INFO
+  file: ./log/application.log
+
+zuul:
+  ignoredServices: '*'
+  sensitiveHeaders: Authorization
+  routes:
+    reservations:
+      path: /reservations/**
+      serviceId: ef-ref-reservation-service
+
+eureka:
+  client:
+    enabled: true

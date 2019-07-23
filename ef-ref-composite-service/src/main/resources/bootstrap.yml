@@ -1,0 +1,17 @@
+server:
+  port: 8080
+  error.whitelabel.enabled: false
+
+spring:
+  application:
+    name: ef-ref-composite-service
+  profiles:
+    active: local
+
+---
+spring:
+  profiles: docker
+  cloud:
+    config:
+      uri: http://ef-ref-config-service:8088
+      fail-fast: true
